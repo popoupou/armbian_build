@@ -55,7 +55,7 @@ index 00000000..1fa5420f
 +
 +	memory {
 +		device_type = "memory";
-+		reg = <0x40000000 0x40000000>;
++		reg = <0x40000000 0x80000000>;
 +	};
 +
 +	emmc_pwrseq: emmc-pwrseq {
