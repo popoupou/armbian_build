@@ -157,7 +157,7 @@ jobs:
           - minimal
           - cli
           - desktop
-       # include:
+        include:
           - TYPE: desktop
             DESKTOP_ENVIRONMENT: xfce
             DESKTOP_ENVIRONMENT_CONFIG_NAME: config_base
