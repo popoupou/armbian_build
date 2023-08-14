@@ -1,0 +1,14 @@
+# Amlogic A311D2 8GB
+BOARD_NAME="Khadas VIM4"
+BOARDFAMILY="meson-s4t7"
+KERNEL_TARGET="legacy"
+BOARD_MAINTAINER="rpardini"
+SERIALCON="ttyS0" # for vendor kernel
+# BOOT_FDT_FILE="amlogic/kvim4.dtb" # not set on purpose; u-boot auto-selects kvim4.dtb or kvim4n.dtb for "new VIM4"
+
+# build uboot from source
+BOOTCONFIG="kvim4_defconfig"
+KHADAS_BOARD_ID="kvim4" # used to compile the fip blobs
+
+# Use extlinux and u-boot-menu extension
+SRC_CMDLINE="console=tty0 console=ttyS0,921600 no_console_suspend earlycon=aml-uart,0xfe078000 mac=\\\${eth_mac} khadas.serial=\\\${usid} partition_type=generic"
