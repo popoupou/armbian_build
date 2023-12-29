@@ -72,6 +72,14 @@ function create_new_rootfs_cache_via_debootstrap() {
 		"'--components=${AGGREGATED_DEBOOTSTRAP_COMPONENTS_COMMA}'" # from aggregation.py
 	)
 
+	# Hacking debootstrap to support future releases as symlink is often the only change, so we don't need to bump host OS
+	# This functionality is coming with debootstrap v1.0.128 (Mantic)
+	local debootstrap_home="/usr/share/debootstrap/scripts"
+	if [[ ! -L "${debootstrap_home}/${RELEASE}" && ! -e "${debootstrap_home}/${RELEASE}" ]]; then
+		display_alert "Making symlink as host deboostrap is missing it" "" "wrn"
+		run_host_command_logged ln -s "${DEBOOTSTRAP_SOURCE}" "${debootstrap_home}/${RELEASE}"
+	fi
+
 	# Small detour for local apt caching option.
 	local_apt_deb_cache_prepare "before debootstrap" # sets LOCAL_APT_CACHE_INFO
 	if [[ "${LOCAL_APT_CACHE_INFO[USE]}" == "yes" ]]; then
@@ -79,20 +87,6 @@ function create_new_rootfs_cache_via_debootstrap() {
 	fi
 
 	deboostrap_arguments+=("--foreign") # release name
-
-	# Debian does not carry riscv64 in their main repo, needs ports, which needs a specific keyring in the host.
-	# that's done in prepare-host.sh when by adding debian-ports-archive-keyring hostdep, but there's an if anyway.
-	# debian-ports-archive-keyring is also included in-image by: config/optional/architectures/riscv64/_config/cli/_all_distributions/main/packages
-	# Revise this after bookworm release.
-	# @TODO: rpardini: this clearly shows a need for hooks for debootstrap
-	if [[ "${ARCH}" == "riscv64" ]] && [[ $DISTRIBUTION == Debian ]]; then
-		if [[ -f /usr/share/keyrings/debian-ports-archive-keyring.gpg ]]; then
-			display_alert "Adding ports keyring for Debian debootstrap" "riscv64" "info"
-			deboostrap_arguments+=("--keyring" "/usr/share/keyrings/debian-ports-archive-keyring.gpg")
-		else
-			exit_with_error "Debian debootstrap for riscv64 needs debian-ports-archive-keyring hostdep"
-		fi
-	fi
 
 	deboostrap_arguments+=("${RELEASE}" "${SDCARD}/" "${debootstrap_apt_mirror}") # release, path and mirror; always last, positional arguments.
 

@@ -16,18 +16,13 @@ function install_distribution_specific() {
 
 	case "${RELEASE}" in
 
-		focal | jammy | kinetic | lunar)
+		focal | jammy | kinetic | lunar | mantic)
 
 			# by using default lz4 initrd compression leads to corruption, go back to proven method
 			# @TODO: rpardini: this should be a config option (which is always set to zstd ;-D )
 			sed -i "s/^COMPRESS=.*/COMPRESS=gzip/" "${SDCARD}"/etc/initramfs-tools/initramfs.conf
 
 			run_host_command_logged rm -f "${SDCARD}"/etc/update-motd.d/{10-uname,10-help-text,50-motd-news,80-esm,80-livepatch,90-updates-available,91-release-upgrade,95-hwe-eol}
-
-			declare RENDERER=networkd
-			if [ -d "${SDCARD}"/etc/NetworkManager ]; then
-				local RENDERER=NetworkManager
-			fi
 
 			# DNS fix
 			if [[ -n "$NAMESERVER" ]]; then
@@ -63,11 +58,19 @@ function install_distribution_specific() {
 	fi
 
 	# Basic Netplan config. Let NetworkManager/networkd manage all devices on this system
-	[[ -d "${SDCARD}"/etc/netplan ]] && cat <<- EOF > "${SDCARD}"/etc/netplan/armbian-default.yaml
+	if [[ -d "${SDCARD}"/etc/netplan ]]; then
+
+		declare RENDERER=networkd
+		if [ -d "${SDCARD}"/etc/NetworkManager ]; then
+			local RENDERER=NetworkManager
+		fi
+
+		cat <<- EOF > "${SDCARD}"/etc/netplan/armbian-default.yaml
 		network:
 		  version: 2
 		  renderer: ${RENDERER}
-	EOF
+		EOF
+	fi
 
 	# cleanup motd services and related files
 	disable_systemd_service_sdcard motd-news.service motd-news.timer
@@ -92,7 +95,7 @@ function install_distribution_specific() {
 # create_sources_list_and_deploy_repo_key <when> <release> <basedir>
 #
 # <when>: rootfs|image
-# <release>: bullseye|bookworm|sid|focal|jammy|kinetic|lunar
+# <release>: bullseye|bookworm|sid|focal|jammy|kinetic|lunar|mantic
 # <basedir>: path to root directory
 #
 function create_sources_list_and_deploy_repo_key() {
@@ -118,7 +121,7 @@ function create_sources_list_and_deploy_repo_key() {
 			EOF
 			;;
 
-		bullseye | trixie)
+		bullseye)
 			cat <<- EOF > "${basedir}"/etc/apt/sources.list
 				deb http://${DEBIAN_MIRROR} $release main contrib non-free
 				#deb-src http://${DEBIAN_MIRROR} $release main contrib non-free
@@ -134,7 +137,7 @@ function create_sources_list_and_deploy_repo_key() {
 			EOF
 			;;
 
-		bookworm)
+		bookworm | trixie)
 			# non-free firmware in bookworm and later has moved from the non-free archive component to a new non-free-firmware component (alongside main/contrib/non-free). This was implemented on 2023-01-27, see also https://lists.debian.org/debian-boot/2023/01/msg00235.html
 			cat <<- EOF > "${basedir}"/etc/apt/sources.list
 				deb http://${DEBIAN_MIRROR} $release main contrib non-free non-free-firmware
@@ -159,9 +162,15 @@ function create_sources_list_and_deploy_repo_key() {
 				deb http://${DEBIAN_MIRROR} unstable main contrib non-free non-free-firmware
 				#deb-src http://${DEBIAN_MIRROR} unstable main contrib non-free non-free-firmware
 			EOF
+
+			# Exception: with riscv64 not everything was moved from ports
+			# https://lists.debian.org/debian-riscv/2023/07/msg00053.html
+			if [[ "${ARCH}" == riscv64 ]]; then
+				echo "deb http://deb.debian.org/debian-ports/ sid main " >> "${basedir}"/etc/apt/sources.list
+			fi
 			;;
 
-		focal | jammy | kinetic | lunar)
+		focal | jammy | kinetic | lunar | mantic)
 			cat <<- EOF > "${basedir}"/etc/apt/sources.list
 				deb http://${UBUNTU_MIRROR} $release main restricted universe multiverse
 				#deb-src http://${UBUNTU_MIRROR} $release main restricted universe multiverse
@@ -201,22 +210,24 @@ function create_sources_list_and_deploy_repo_key() {
 	components+=("${RELEASE}-utils")   # utils contains packages Igor picks from other repos
 	components+=("${RELEASE}-desktop") # desktop contains packages Igor picks from other repos
 
-	# stage: add armbian repository and install key
-	if [[ $DOWNLOAD_MIRROR == "china" ]]; then
-		echo "deb ${SIGNED_BY}https://mirrors.tuna.tsinghua.edu.cn/armbian $RELEASE ${components[*]}" > "${basedir}"/etc/apt/sources.list.d/armbian.list
-	elif [[ $DOWNLOAD_MIRROR == "bfsu" ]]; then
-		echo "deb ${SIGNED_BY}http://mirrors.bfsu.edu.cn/armbian $RELEASE ${components[*]}" > "${basedir}"/etc/apt/sources.list.d/armbian.list
-	else
-		echo "deb ${SIGNED_BY}http://$([[ $BETA == yes ]] && echo "beta" || echo "apt").armbian.com $RELEASE ${components[*]}" > "${basedir}"/etc/apt/sources.list.d/armbian.list
-	fi
+	if [[ "${when}" != "image-early" ]]; then # only add armbian.list when==image-late
+		# stage: add armbian repository and install key
+		if [[ $DOWNLOAD_MIRROR == "china" ]]; then
+			echo "deb ${SIGNED_BY}https://mirrors.tuna.tsinghua.edu.cn/armbian $RELEASE ${components[*]}" > "${basedir}"/etc/apt/sources.list.d/armbian.list
+		elif [[ $DOWNLOAD_MIRROR == "bfsu" ]]; then
+			echo "deb ${SIGNED_BY}http://mirrors.bfsu.edu.cn/armbian $RELEASE ${components[*]}" > "${basedir}"/etc/apt/sources.list.d/armbian.list
+		else
+			echo "deb ${SIGNED_BY}http://$([[ $BETA == yes ]] && echo "beta" || echo "apt").armbian.com $RELEASE ${components[*]}" > "${basedir}"/etc/apt/sources.list.d/armbian.list
+		fi
 
-	# replace local package server if defined. Suitable for development
-	[[ -n $LOCAL_MIRROR ]] && echo "deb ${SIGNED_BY}http://$LOCAL_MIRROR $RELEASE ${components[*]}" > "${basedir}"/etc/apt/sources.list.d/armbian.list
+		# replace local package server if defined. Suitable for development
+		[[ -n $LOCAL_MIRROR ]] && echo "deb ${SIGNED_BY}http://$LOCAL_MIRROR $RELEASE ${components[*]}" > "${basedir}"/etc/apt/sources.list.d/armbian.list
 
-	# disable repo if SKIP_ARMBIAN_REPO==yes, or if when==image-early.
-	if [[ "${when}" == "image-early" || "${SKIP_ARMBIAN_REPO}" == "yes" ]]; then
-		display_alert "Disabling Armbian repo" "${ARCH}-${RELEASE} :: skip:${SKIP_ARMBIAN_REPO:-"no"} when:${when}" "info"
-		mv "${SDCARD}"/etc/apt/sources.list.d/armbian.list "${SDCARD}"/etc/apt/sources.list.d/armbian.list.disabled
+		# disable repo if SKIP_ARMBIAN_REPO==yes, or if when==image-early.
+		if [[ "${SKIP_ARMBIAN_REPO}" == "yes" ]]; then
+			display_alert "Disabling Armbian repo" "${ARCH}-${RELEASE} :: skip:${SKIP_ARMBIAN_REPO:-"no"} when:${when}" "info"
+			mv "${SDCARD}"/etc/apt/sources.list.d/armbian.list "${SDCARD}"/etc/apt/sources.list.d/armbian.list.disabled
+		fi
 	fi
 
 	declare CUSTOM_REPO_WHEN="${when}"
