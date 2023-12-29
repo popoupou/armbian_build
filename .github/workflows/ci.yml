@@ -146,9 +146,9 @@ jobs:
           #- edge
           - current
         RELEASE:
-          # - focal # Ubuntu 20.04 LTS
+          - focal # Ubuntu 20.04 LTS
           - jammy # Ubuntu 22.04 LTS
-          # - lunar # Ubuntu 23.04
+          - lunar # Ubuntu 23.04
           # - buster # Debian 10
           #- bullseye # Debian 11
           #- bookworm # Debian 12
