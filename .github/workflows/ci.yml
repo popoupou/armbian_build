@@ -149,12 +149,12 @@ jobs:
           #- focal # Ubuntu 20.04 LTS
           - jammy # Ubuntu 22.04 LTS
           #- lunar # Ubuntu 23.04
+          - noble # Ubuntu 24.04 LTS
           # - buster # Debian 10
           #- bullseye # Debian 11
           #- bookworm # Debian 12
           #- sid # Debian unstable
         TYPE:
-          - minimal
           - cli
           - desktop
         include:
@@ -183,7 +183,7 @@ jobs:
           done
 
       - name: Download debs
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: debs-${{ matrix.BRANCH }}
           path: output/debs/
