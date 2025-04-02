@@ -16,7 +16,7 @@ env:
   UBOOT_BURNIMG: eMMC.burn.img
   ARMBIAN_REPO: popoupou/armbian_build
   ARMBIAN_REF: main
-  PATCHES: 4077,5076,5082
+  PATCHES: 4077,5076
 
 jobs:
   prepare:
