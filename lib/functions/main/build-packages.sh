@@ -11,7 +11,7 @@ function determine_artifacts_to_build_for_image() {
 	if [[ "${BOOTCONFIG}" != "none" ]]; then
 		artifacts_to_build+=("uboot")
 	fi
-	if [[ -n $KERNELSOURCE ]]; then
+	if [[ "${KERNELSOURCE}" != 'none' ]]; then
 		artifacts_to_build+=("kernel")
 	fi
 
@@ -29,12 +29,6 @@ function determine_artifacts_to_build_for_image() {
 
 	if [[ "${DISTRIBUTION}" == "Ubuntu" ]]; then
 		artifacts_to_build+=("fake_ubuntu_advantage_tools")
-	fi
-
-	if [[ "${PACKAGE_LIST_RM}" != *armbian-config* ]]; then
-		if [[ $BUILD_MINIMAL != yes ]]; then
-			artifacts_to_build+=("armbian-config")
-		fi
 	fi
 
 	if [[ "${PACKAGE_LIST_RM}" != *armbian-zsh* ]]; then
