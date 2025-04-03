@@ -323,6 +323,9 @@ jobs:
           EOF
 
           tag="ci-$(date -d "$TIME" -u +'%Y%m%d-%H%M%S-%Z')"
+
+          sudo apt-get update && sudo apt-get install -y hub
+
           hub release create  -t "$GITHUB_SHA" "$tag" -F Release.md \
             -a sha256sum \
             $(for a in artifacts/*/Armbian_*; do echo -a $a; done) \
