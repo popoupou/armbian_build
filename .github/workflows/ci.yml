@@ -218,7 +218,6 @@ jobs:
           # 验证 img2simg 是否安装成功
           if command -v img2simg &> /dev/null; then
               echo "img2simg 安装成功"
-              img2simg --version
           else
               echo "img2simg 安装失败，请检查系统环境"
               exit 1
@@ -232,7 +231,6 @@ jobs:
           # 验证 AmlImg 是否可执行
           if [ -x ./AmlImg ]; then
               echo "AmlImg 下载并授权成功"
-              ./AmlImg --help || true
           else
               echo "AmlImg 下载或授权失败"
               exit 1
