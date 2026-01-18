@@ -211,13 +211,34 @@ jobs:
               COMPRESS_OUTPUTIMAGE=img
           sudo chown $(id -u):$(id -g) -R output/
 
-      - name: Install Dependents
+      - name: Install Dependencies
         run: |
-          sudo apt install img2simg
-
+          # 更新软件源并安装替代包（android-sdk-libsparse-utils 包含 img2simg）
+          sudo apt update && sudo apt install -y android-sdk-libsparse-utils
+          
+          # 验证 img2simg 是否安装成功
+          if command -v img2simg &> /dev/null; then
+              echo "img2simg 安装成功"
+              img2simg --version
+          else
+              echo "img2simg 安装失败，请检查系统环境"
+              exit 1
+          fi
+    
+          # 下载并配置 AmlImg
           ver="v0.3.1"
           curl -L -o ./AmlImg https://github.com/hzyitc/AmlImg/releases/download/$ver/AmlImg_${ver}_linux_amd64
           chmod +x ./AmlImg
+          
+          # 验证 AmlImg 是否可执行
+          if [ -x ./AmlImg ]; then
+              echo "AmlImg 下载并授权成功"
+              ./AmlImg --help || true
+          else
+              echo "AmlImg 下载或授权失败"
+              exit 1
+          fi
+        continue-on-error: false  # 依赖安装失败时终止流程
 
       - name: Download and unpack the latest u-boot
         run: |
