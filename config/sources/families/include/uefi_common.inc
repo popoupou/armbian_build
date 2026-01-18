@@ -10,6 +10,7 @@ declare -g SERIALCON="${SERIALCON:-tty1}"            # Consistent serial console
 declare -g UEFI_GRUB_TIMEOUT=${UEFI_GRUB_TIMEOUT:-3} # Default 3-seconds timeout for GRUB menu.
 declare -g BOARD_FIRMWARE_INSTALL="-full"            # Install full firmware for UEFI boards
 declare -g DISTRO_GENERIC_KERNEL=no
+declare -g POWER_MANAGEMENT_FEATURES=yes             # Suspend and resume might work well in UEFI, elsewhere is disabled by default
 
 case "${BRANCH}" in
 
@@ -21,23 +22,27 @@ case "${BRANCH}" in
 		;;
 	cloud)
 		declare -g GRUB_CMDLINE_LINUX_DEFAULT="selinux=0 loglevel=3 max_loop=32"
-		declare -g KERNEL_MAJOR_MINOR="6.12"
+		declare -g KERNEL_MAJOR_MINOR="6.18"
 		declare -g LINUXCONFIG="linux-uefi-${LINUXFAMILY}-cloud"
 		declare -g INSTALL_ARMBIAN_FIRMWARE="no"
 		declare -g EXTRAWIFI="no"
 		declare -g UEFI_GRUB_TIMEOUT=0
+		declare -g QCOW2_RESIZE_AMOUNT="16G"
+		# add additional packages to the image
+		display_alert "Add additional packages to the image" "qemu-guest-agent spice-vdagent" "debug"
+		add_packages_to_image qemu-guest-agent spice-vdagent
 		;;
 
 	legacy)
-		declare -g KERNEL_MAJOR_MINOR="6.6"
-		;;
-
-	current)
 		declare -g KERNEL_MAJOR_MINOR="6.12"
 		;;
 
+	current)
+		declare -g KERNEL_MAJOR_MINOR="6.18"
+		;;
+
 	edge)
-		declare -g KERNEL_MAJOR_MINOR="6.14"
+		declare -g KERNEL_MAJOR_MINOR="6.19"
 		;;
 esac
 
@@ -54,7 +59,7 @@ if [[ "${QEMU_UBOOT_BOOTCONFIG}" != "" ]]; then
 	declare -g ATF_COMPILE="no"
 
 	declare -g BOOTDIR="qemu-uboot-${LINUXFAMILY}"
-	declare -g BOOTBRANCH='tag:v2025.01'
+	declare -g BOOTBRANCH='tag:v2025.10'
 	declare -g BOOTSOURCE='https://github.com/u-boot/u-boot' # Gotta set this again, it is unset by grub extension
 
 	declare -g BOOTCONFIG="${QEMU_UBOOT_BOOTCONFIG}"

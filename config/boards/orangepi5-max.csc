@@ -1,5 +1,6 @@
 # Rockchip RK3588 octa core 4/8/16GB RAM SoC SPI NVMe 2x USB2 2x USB3 2x HDMI
 BOARD_NAME="Orange Pi 5 Max"
+BOARD_VENDOR="xunlong"
 BOARDFAMILY="rockchip-rk3588"
 BOARD_MAINTAINER=""
 BOOTCONFIG="orangepi-5-max-rk3588_defconfig" # vendor name, not standard, see hook below, set BOOT_SOC below to compensate
@@ -15,6 +16,29 @@ BOOT_SPI_RKSPI_LOADER="yes"
 IMAGE_PARTITION_TABLE="gpt"
 enable_extension "bcmdhd"
 BCMDHD_TYPE="sdio"
+
+# Mainline U-Boot for edge kernel
+function post_family_config_branch_edge__orangepi5max_use_mainline_uboot() {
+	display_alert "$BOARD" "Mainline U-Boot overrides for $BOARD - $BRANCH" "info"
+	unset BOOT_FDT_FILE
+	declare -g BOOTCONFIG="orangepi-5-max-rk3588_defconfig"
+	declare -g BOOTDELAY=1
+	declare -g BOOTSOURCE="https://github.com/u-boot/u-boot.git"
+	declare -g BOOTBRANCH="tag:v2025.04"
+	declare -g BOOTPATCHDIR="v2025.04"
+	declare -g BOOTDIR="u-boot-${BOARD}"
+	declare -g UBOOT_TARGET_MAP="BL31=${RKBIN_DIR}/${BL31_BLOB} ROCKCHIP_TPL=${RKBIN_DIR}/${DDR_BLOB};;u-boot-rockchip.bin u-boot-rockchip-spi.bin"
+	unset uboot_custom_postprocess write_uboot_platform write_uboot_platform_mtd # disable stuff from rockchip64_common; we're using binman here which does all the work already
+
+	# Just use the binman-provided u-boot-rockchip.bin, which is ready-to-go
+	function write_uboot_platform() {
+		dd "if=$1/u-boot-rockchip.bin" "of=$2" bs=32k seek=1 conv=notrunc status=none
+	}
+
+	function write_uboot_platform_mtd() {
+		flashcp -v -p "$1/u-boot-rockchip-spi.bin" /dev/mtd0
+	}
+}
 
 function post_family_tweaks__orangepi5max_naming_audios() {
 	display_alert "$BOARD" "Renaming orangepi5max audios" "info"

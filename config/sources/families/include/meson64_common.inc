@@ -36,23 +36,18 @@ GOVERNOR=${GOVERNOR:-ondemand}
 case $BRANCH in
 
 	current)
-		declare -g KERNEL_MAJOR_MINOR="6.12"
+		declare -g KERNEL_MAJOR_MINOR="6.18"
 		;;
 	edge)
-		declare -g KERNEL_MAJOR_MINOR="6.14"
+		declare -g KERNEL_MAJOR_MINOR="6.19"
 		;;
 
 esac
 
 # Use custom vendor driver for wireless rtl88x2cs
 # See https://github.com/armbian/build/pull/6227
-# @TODO Only use for BOARDFAMILY="jethub" devices?
 function custom_kernel_config__enable_rtl88x2cs_driver() {
-	kernel_config_modifying_hashes+=("CONFIG_RTL8822CS=m")
-	if [[ -f .config ]]; then
-		display_alert "Enabling rtl88x2cs driver in kernel config" "armbian-kernel" "wrn"
-		kernel_config_set_m CONFIG_RTL8822CS
-	fi
+	opts_m+=("CONFIG_RTL8822CS")
 }
 
 # this helper function includes postprocess for s400 and its variants.

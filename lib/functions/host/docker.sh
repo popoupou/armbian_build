@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: GPL-2.0
 #
-# Copyright (c) 2013-2023 Igor Pecovnik, igor@armbian.com
+# Copyright (c) 2013-2026 Igor Pecovnik, igor@armbian.com
 #
 # This file is a part of the Armbian Build Framework
 # https://github.com/armbian/build/
@@ -42,6 +42,7 @@ function get_docker_info_once() {
 	if [[ -z "${DOCKER_INFO}" ]]; then
 		declare -g DOCKER_INFO
 		declare -g DOCKER_IN_PATH="no"
+		declare -g DOCKER_IS_PODMAN
 
 		# if "docker" is in the PATH...
 		if [[ -n "$(command -v docker)" ]]; then
@@ -52,6 +53,15 @@ function get_docker_info_once() {
 		# Shenanigans to go around error control & capture output in the same effort.
 		DOCKER_INFO="$({ docker info 2> /dev/null && echo "DOCKER_INFO_OK"; } || true)"
 		declare -g -r DOCKER_INFO="${DOCKER_INFO}" # readonly
+
+		if docker --version | grep -q podman; then
+			DOCKER_IS_PODMAN="yes"
+		# when `docker` is a shim to `podman`, it will report its version as "podman version #.#.#"
+		else
+			DOCKER_IS_PODMAN=""
+		fi
+		declare -g -r DOCKER_IS_PODMAN="${DOCKER_IS_PODMAN}" # readonly
+
 
 		declare -g DOCKER_INFO_OK="no"
 		if [[ "${DOCKER_INFO}" =~ "DOCKER_INFO_OK" ]]; then
@@ -121,8 +131,7 @@ function docker_cli_prepare() {
 	# declare -g DOCKER_ARMBIAN_BASE_IMAGE="${DOCKER_ARMBIAN_BASE_IMAGE:-"debian:trixie"}"
 	# declare -g DOCKER_ARMBIAN_BASE_IMAGE="${DOCKER_ARMBIAN_BASE_IMAGE:-"debian:bookworm"}"
 	# declare -g DOCKER_ARMBIAN_BASE_IMAGE="${DOCKER_ARMBIAN_BASE_IMAGE:-"debian:sid"}"
-	# declare -g DOCKER_ARMBIAN_BASE_IMAGE="${DOCKER_ARMBIAN_BASE_IMAGE:-"ubuntu:kinetic"}"
-	declare -g DOCKER_ARMBIAN_BASE_IMAGE="${DOCKER_ARMBIAN_BASE_IMAGE:-"ubuntu:jammy"}"
+	declare -g DOCKER_ARMBIAN_BASE_IMAGE="${DOCKER_ARMBIAN_BASE_IMAGE:-"ubuntu:noble"}"
 	declare -g DOCKER_ARMBIAN_TARGET_PATH="${DOCKER_ARMBIAN_TARGET_PATH:-"/armbian"}"
 
 	declare wanted_os_tag="${DOCKER_ARMBIAN_BASE_IMAGE%%:*}"
@@ -248,12 +257,14 @@ function docker_cli_prepare_dockerfile() {
 	# initialize the extension manager; enable all extensions; only once..
 	if [[ "${docker_prepare_cli_skip_exts:-no}" != "yes" ]]; then
 		display_alert "Docker launcher" "enabling all extensions looking for Docker dependencies" "info"
-		enable_all_extensions_builtin_and_user
+		declare -i seconds_before_extensions=$SECONDS
+		enable_extensions_with_hostdeps_builtin_and_user "add_host_dependencies" "host_dependencies_known"
 		initialize_extension_manager
+		display_alert "Docker launcher" "enabled extensions in $((SECONDS - seconds_before_extensions)) seconds" "debug"
 	fi
 	declare -a -g host_dependencies=()
 
-	host_release="${DOCKER_WANTED_RELEASE}" early_prepare_host_dependencies
+	host_release="${DOCKER_WANTED_RELEASE}" early_prepare_host_dependencies # hooks: add_host_dependencies // host_dependencies_known
 	display_alert "Pre-game host dependencies for host_release '${DOCKER_WANTED_RELEASE}'" "${host_dependencies[*]}" "debug"
 
 	# This includes apt install equivalent to install_host_dependencies()
@@ -281,10 +292,9 @@ function docker_cli_prepare_dockerfile() {
 		${c}RUN echo "--> CACHE MISS IN DOCKERFILE: apt packages." && \\
 		${c} DEBIAN_FRONTEND=noninteractive apt-get -y update && \\
 		${c} DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ${BASIC_DEPS[@]} ${host_dependencies[@]}
-		${c}RUN sed -i 's/# en_US.UTF-8/en_US.UTF-8/' /etc/locale.gen
-		${c}RUN locale-gen
+		${c}# Use C.UTF-8 locale which is available in rootfs from the very first command
 		WORKDIR ${DOCKER_ARMBIAN_TARGET_PATH}
-		ENV ARMBIAN_RUNNING_IN_CONTAINER=yes
+		ENV ARMBIAN_RUNNING_IN_CONTAINER=yes LANG=C.UTF-8
 		ADD . ${DOCKER_ARMBIAN_TARGET_PATH}/
 		${c}${c_req}RUN echo "--> CACHE MISS IN DOCKERFILE: running Armbian requirements initialization." && \\
 		${c}${c_req} ARMBIAN_INSIDE_DOCKERFILE_BUILD="yes" /bin/bash "${DOCKER_ARMBIAN_TARGET_PATH}/compile.sh" requirements SHOW_LOG=yes && \\
@@ -408,6 +418,13 @@ function docker_cli_prepare_launch() {
 		"--env" "GITHUB_SHA=${GITHUB_SHA}"
 		"--env" "GITHUB_WORKFLOW=${GITHUB_WORKFLOW}"
 		"--env" "GITHUB_WORKSPACE=${GITHUB_WORKSPACE}"
+
+		# Pass proxy args
+ 		"--env" "http_proxy=${http_proxy:-${HTTP_PROXY}}"
+ 		"--env" "https_proxy=${https_proxy:-${HTTPS_PROXY}}"
+ 		"--env" "HTTP_PROXY=${HTTP_PROXY}"
+		"--env" "HTTPS_PROXY=${HTTPS_PROXY}"
+		"--env" "APT_PROXY_ADDR=${APT_PROXY_ADDR}"
 	)
 
 	# This env var is used super early (in entrypoint.sh), so set it as an env to current value.
@@ -495,7 +512,7 @@ function docker_cli_prepare_launch() {
 				# type=volume, without source=, is an anonymous volume -- will be auto cleaned up together with the container;
 				# this could also be a type=tmpfs if you had enough ram - but armbian already does tmpfs for you if you
 				#                                                         have enough RAM (inside the container) so don't bother.
-				DOCKER_ARGS+=("--mount" "type=volume,destination=${DOCKER_ARMBIAN_TARGET_PATH}/${MOUNT_DIR}")
+				DOCKER_ARGS+=("--mount" "type=volume,destination=${DOCKER_ARMBIAN_TARGET_PATH}/${MOUNT_DIR}${DOCKER_IS_PODMAN:+,exec,dev}")
 				;;
 			bind)
 				display_alert "Mounting" "bind mount for '${MOUNT_DIR}'" "debug"
@@ -504,7 +521,7 @@ function docker_cli_prepare_launch() {
 				;;
 			namedvolume)
 				display_alert "Mounting" "named volume id '${volume_id}' for '${MOUNT_DIR}'" "debug"
-				DOCKER_ARGS+=("--mount" "type=volume,source=armbian-${volume_id},destination=${DOCKER_ARMBIAN_TARGET_PATH}/${MOUNT_DIR}")
+				DOCKER_ARGS+=("--mount" "type=volume,source=armbian-${volume_id},destination=${DOCKER_ARMBIAN_TARGET_PATH}/${MOUNT_DIR}${DOCKER_IS_PODMAN:+,exec,dev}")
 				;;
 			*)
 				display_alert "Unknown Mountpoint Type" "unknown volume type '${docker_kind}' for '${MOUNT_DIR}'" "err"
@@ -585,7 +602,7 @@ function docker_cli_launch() {
 	local -i docker_build_result
 	if docker run "${DOCKER_ARGS[@]}" "${DOCKER_ARMBIAN_INITIAL_IMAGE_TAG}" /bin/bash "${DOCKER_ARMBIAN_TARGET_PATH}/compile.sh" "${ARMBIAN_CLI_FINAL_RELAUNCH_ARGS[@]}"; then
 		docker_build_result=$? # capture exit code of test done in the line above.
-		display_alert "-------------Docker run finished after ${SECONDS}s------------------------" "🐳 successfull" "info"
+		display_alert "-------------Docker run finished after ${SECONDS}s------------------------" "🐳 successful" "info"
 	else
 		docker_build_result=$? # capture exit code of test done 4 lines above.
 		# No use polluting GHA/CI with notices about Docker failure (real failure, inside Docker, generated enough errors already) skip_ci_special="yes"

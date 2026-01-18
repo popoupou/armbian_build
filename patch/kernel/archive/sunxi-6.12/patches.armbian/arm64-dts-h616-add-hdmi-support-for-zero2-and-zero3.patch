@@ -75,7 +75,7 @@ index 111111111111..222222222222 100644
  	vmmc-supply = <&reg_dcdce>;
  };
 diff --git a/arch/arm64/boot/dts/allwinner/sun50i-h616.dtsi b/arch/arm64/boot/dts/allwinner/sun50i-h616.dtsi
-index 450382ae1900..b7df6e4c054f 100644
+index 111111111111..222222222222 100644
 --- a/arch/arm64/boot/dts/allwinner/sun50i-h616.dtsi
 +++ b/arch/arm64/boot/dts/allwinner/sun50i-h616.dtsi
 @@ -7,8 +7,11 @@
@@ -154,7 +154,7 @@ index 450382ae1900..b7df6e4c054f 100644
  		gpu: gpu@1800000 {
  			compatible = "allwinner,sun50i-h616-mali",
  				     "arm,mali-bifrost";
-@@ -192,12 +245,31 @@ syscon: syscon@3000000 {
+@@ -193,12 +246,31 @@ syscon: syscon@3000000 {
  			#size-cells = <1>;
  			ranges;
  
@@ -186,7 +186,7 @@ index 450382ae1900..b7df6e4c054f 100644
  			};
  
  			sram_c1: sram@1a00000 {
-@@ -903,6 +975,147 @@ ohci3: usb@5311400 {
+@@ -904,6 +976,147 @@ ohci3: usb@5311400 {
  			status = "disabled";
  		};
  
