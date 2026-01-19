@@ -1,13 +1,13 @@
 From 7ee5e1ab3026c8011af1e49d7930bdcf782c3c56 Mon Sep 17 00:00:00 2001
 From: hzy <hzyitc@outlook.com>
 Date: Sat, 1 Apr 2023 13:24:42 +0800
-Subject: [PATCH 1/2] ARM: dts: meson8b: Add DTS for Xunlei Onecloud
+Subject: [PATCH 1/2] ARM: dts: meson8b: Add DTS for Xunlei Onecloud with WiFi/BT support
 
 Signed-off-by: hzy <hzyitc@outlook.com>
 ---
  arch/arm/boot/dts/Makefile             |   1 +
- arch/arm/boot/dts/meson8b-onecloud.dts | 410 +++++++++++++++++++++++++
- 2 files changed, 411 insertions(+)
+ arch/arm/boot/dts/meson8b-onecloud.dts | 470 ++++++++++++++++++++++++++++++++-
+ 2 files changed, 470 insertions(+)
  create mode 100644 arch/arm/boot/dts/meson8b-onecloud.dts
 
 diff --git a/arch/arm/boot/dts/Makefile b/arch/arm/boot/dts/Makefile
@@ -27,10 +27,11 @@ new file mode 100644
 index 00000000..1fa5420f
 --- /dev/null
 +++ b/arch/arm/boot/dts/meson8b-onecloud.dts
-@@ -0,0 +1,410 @@
+@@ -0,0 +1,470 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
 + * Author: hzy <hzyitc@outlook.com>
++ * Add WiFi/BT support for Xunlei Onecloud
 + */
 +
 +/dts-v1/;
@@ -38,6 +39,7 @@ index 00000000..1fa5420f
 +#include "meson8b.dtsi"
 +#include <dt-bindings/gpio/gpio.h>
 +#include <dt-bindings/input/input.h>
++#include <dt-bindings/interrupt-controller/irq.h>
 +
 +/ {
 +	model = "Xunlei OneCloud";
@@ -47,6 +49,7 @@ index 00000000..1fa5420f
 +		serial0 = &uart_AO;
 +		mmc0 = &sd_card_slot;
 +		mmc1 = &sdhc;
++		mmc2 = &sdio_wifi;
 +	};
 +
 +	chosen {
@@ -61,6 +64,34 @@ index 00000000..1fa5420f
 +	emmc_pwrseq: emmc-pwrseq {
 +		compatible = "mmc-pwrseq-emmc";
 +		reset-gpios = <&gpio BOOT_9 GPIO_ACTIVE_LOW>;
++	};
++
++	/* Add WiFi/BT core configuration */
++	bt-dev {
++		compatible = "amlogic,bt-dev";
++		dev_name = "bt-dev";
++		status = "okay";
++		gpio_reset = <&gpio GPIOX_20 GPIO_ACTIVE_HIGH>;
++	};
++
++	wifi {
++		compatible = "amlogic,aml_broadcm_wifi";
++		dev_name = "aml_broadcm_wifi";
++		status = "okay";
++		interrupt_pin = <&gpio GPIOX_21 GPIO_ACTIVE_HIGH>;
++		irq_num = <4>;
++		irq_trigger_type = <IRQ_TYPE_LEVEL_HIGH>;
++		power_on_pin = <&gpio_ao GPIOAO_6 GPIO_ACTIVE_HIGH>;
++		power_on_pin2 = <&gpio GPIOX_11 GPIO_ACTIVE_HIGH>;
++		clock_32k_pin = <&gpio GPIOX_10 GPIO_ACTIVE_HIGH>;
++	};
++
++	wifi_power {
++		compatible = "amlogic,wifi_power";
++		dev_name = "wifi_power";
++		status = "okay";
++		power_gpio = <&gpio_ao GPIOAO_6 GPIO_ACTIVE_HIGH>;
++		power_gpio2 = <&gpio GPIOX_11 GPIO_ACTIVE_HIGH>;
 +	};
 +
 +	button {
@@ -384,6 +415,23 @@ index 00000000..1fa5420f
 +		vmmc-supply = <&vcc_3v3>;
 +		// vqmmc-supply = <&vcc_3v3>;
 +	};
++
++	// WiFi SDIO slot
++	sdio_wifi: slot@0 {
++		compatible = "mmc-slot";
++		reg = <0>;
++		status = "okay";
++		pinname = "sdio";
++		ocr_avail = <0x200000>;
++		caps = "MMC_CAP_4_BIT_DATA","MMC_CAP_SDIO_IRQ",
++		       "MMC_CAP_MMC_HIGHSPEED","MMC_CAP_SD_HIGHSPEED",
++		       "MMC_CAP_NONREMOVABLE";
++		f_min = <300000>;
++		f_max = <50000000>;
++		max_req_size = <0x20000>;
++		card_type = <3>; // SDIO device (WiFi)
++		vmmc-supply = <&vcc_3v3>;
++	};
 +};
 +
 +&ethmac {
@@ -440,4 +488,3 @@ index 00000000..1fa5420f
 +};
 -- 
 2.34.1
-
