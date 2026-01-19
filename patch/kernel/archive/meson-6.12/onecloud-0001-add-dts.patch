@@ -137,7 +137,7 @@ index 000000000000..111111111111
 +			linux,default-trigger = "usb-host";
 +		};
 +	};
-
++
 +	hdmi-connector {
 +		compatible = "hdmi-connector";
 +		type = "a";
