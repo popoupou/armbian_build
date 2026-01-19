@@ -6,8 +6,8 @@ Subject: ARM: dts: meson8b: Add DTS for Xunlei Onecloud
 Signed-off-by: hzy <hzyitc@outlook.com>
 ---
  arch/arm/boot/dts/amlogic/Makefile             |   1 +
- arch/arm/boot/dts/amlogic/meson8b-onecloud.dts | 470 ++++++++++++++++++++++++++++++++-
- 2 files changed, 470 insertions(+)
+ arch/arm/boot/dts/amlogic/meson8b-onecloud.dts | 516 ++++++++++++++++++++++++++++++++-
+ 2 files changed, 516 insertions(+)
 
 diff --git a/arch/arm/boot/dts/amlogic/Makefile b/arch/arm/boot/dts/amlogic/Makefile
 index 111111111111..222222222222 100644
@@ -24,7 +24,7 @@ new file mode 100644
 index 000000000000..111111111111
 --- /dev/null
 +++ b/arch/arm/boot/dts/amlogic/meson8b-onecloud.dts
-@@ -0,0 +1,410 @@
+@@ -0,0 +1,516 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
 + * Author: hzy <hzyitc@outlook.com>
@@ -135,6 +135,48 @@ index 000000000000..111111111111
 +
 +			default-state = "off";
 +			linux,default-trigger = "usb-host";
++		};
++	};
+
++	hdmi-connector {
++		compatible = "hdmi-connector";
++		type = "a";
++
++		port {
++			hdmi_connector_in: endpoint {
++				remote-endpoint = <&hdmi_tx_tmds_out>;
++			};
++		};
++	};
++
++	sound {
++		compatible = "amlogic,gx-sound-card";
++
++		assigned-clocks = <&clkc CLKID_MPLL0>,
++				  <&clkc CLKID_MPLL1>;
++		assigned-clock-rates = <294912000>,
++				       <270950400>;
++
++		dai-link-0 {
++			sound-dai = <&aiu AIU_CPU CPU_I2S_FIFO>;
++		};
++
++		dai-link-1 {
++			sound-dai = <&aiu AIU_CPU CPU_I2S_ENCODER>;
++			dai-format = "i2s";
++			mclk-fs = <256>;
++
++			codec-0 {
++				sound-dai = <&aiu AIU_HDMI CTRL_I2S>;
++			};
++		};
++
++		dai-link-2 {
++			sound-dai = <&aiu AIU_HDMI CTRL_OUT>;
++
++			codec-0 {
++				sound-dai = <&hdmi_tx 0>;
++			};
 +		};
 +	};
 +
@@ -255,6 +297,10 @@ index 000000000000..111111111111
 +&mali {
 +	// commented to allow cpufreq tweaking
 +	// mali-supply = <&vcc_core>;
++};
++
++&aiu {
++	status = "okay";
 +};
 +
 +&gpio {
@@ -476,6 +522,18 @@ index 000000000000..111111111111
 +
 +&usb1_phy {
 +	status = "okay";
++};
++
++&hdmi_tx {
++	status = "okay";
++	pinctrl-0 = <&hdmi_hpd_pins>, <&hdmi_i2c_pins>;
++	pinctrl-names = "default";
++};
++
++&hdmi_tx_tmds_port {
++	hdmi_tx_tmds_out: endpoint {
++		remote-endpoint = <&hdmi_connector_in>;
++	};
 +};
 +
 +&ir_receiver {
