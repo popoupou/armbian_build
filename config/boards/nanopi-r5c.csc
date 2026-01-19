@@ -1,5 +1,6 @@
 # Rockchip RK3568 quad core 4GB RAM eMMC USB3 2x 2.5GbE
 BOARD_NAME="NanoPi R5C"
+BOARD_VENDOR="friendlyelec"
 BOARDFAMILY="rockchip64"
 BOARD_MAINTAINER=""
 BOOT_SOC="rk3568"
@@ -30,7 +31,7 @@ function post_family_tweaks__nanopir5c_udev_network_interfaces() {
 
 	mkdir -p $SDCARD/etc/udev/rules.d/
 	cat <<- EOF > "${SDCARD}/etc/udev/rules.d/70-persistent-net.rules"
-		SUBSYSTEM=="net", ACTION=="add", KERNELS=="0001:01:00.0", NAME:="lan"
-		SUBSYSTEM=="net", ACTION=="add", KERNELS=="0002:01:00.0", NAME:="wan"
+		SUBSYSTEM=="net", ACTION=="add", KERNELS=="0001:01:00.0", NAME:="lan1"
+		SUBSYSTEM=="net", ACTION=="add", KERNELS=="0002:01:00.0", NAME:="wan1"
 	EOF
 }

@@ -14,7 +14,7 @@ diff --git a/drivers/power/supply/axp20x_battery.c b/drivers/power/supply/axp20x
 index 111111111111..222222222222 100644
 --- a/drivers/power/supply/axp20x_battery.c
 +++ b/drivers/power/supply/axp20x_battery.c
-@@ -270,6 +270,25 @@ static int axp717_get_constant_charge_current(struct axp20x_batt_ps *axp,
+@@ -273,6 +273,25 @@ static int axp717_get_constant_charge_current(struct axp20x_batt_ps *axp,
  	return 0;
  }
  
@@ -40,7 +40,7 @@ index 111111111111..222222222222 100644
  static int axp20x_battery_get_prop(struct power_supply *psy,
  				   enum power_supply_property psp,
  				   union power_supply_propval *val)
-@@ -367,6 +386,9 @@ static int axp20x_battery_get_prop(struct power_supply *psy,
+@@ -370,6 +389,9 @@ static int axp20x_battery_get_prop(struct power_supply *psy,
  		val->intval *= 1000;
  		break;
  
@@ -50,7 +50,7 @@ index 111111111111..222222222222 100644
  	case POWER_SUPPLY_PROP_CAPACITY:
  		/* When no battery is present, return capacity is 100% */
  		ret = regmap_read(axp20x_batt->regmap, AXP20X_PWR_OP_MODE,
-@@ -851,6 +873,7 @@ static enum power_supply_property axp20x_battery_props[] = {
+@@ -853,6 +875,7 @@ static enum power_supply_property axp20x_battery_props[] = {
  	POWER_SUPPLY_PROP_HEALTH,
  	POWER_SUPPLY_PROP_VOLTAGE_MAX,
  	POWER_SUPPLY_PROP_VOLTAGE_MIN,

@@ -15,7 +15,7 @@ diff --git a/drivers/cpufreq/sun50i-cpufreq-nvmem.c b/drivers/cpufreq/sun50i-cpu
 index 111111111111..222222222222 100644
 --- a/drivers/cpufreq/sun50i-cpufreq-nvmem.c
 +++ b/drivers/cpufreq/sun50i-cpufreq-nvmem.c
-@@ -235,6 +235,8 @@ static int sun50i_cpufreq_nvmem_probe(struct platform_device *pdev)
+@@ -241,6 +241,8 @@ static int sun50i_cpufreq_nvmem_probe(struct platform_device *pdev)
  	snprintf(name, sizeof(name), "speed%d", speed);
  	config.prop_name = name;
  

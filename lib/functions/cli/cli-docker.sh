@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: GPL-2.0
 #
-# Copyright (c) 2013-2023 Igor Pecovnik, igor@armbian.com
+# Copyright (c) 2013-2026 Igor Pecovnik, igor@armbian.com
 #
 # This file is a part of the Armbian Build Framework
 # https://github.com/armbian/build/
@@ -65,6 +65,9 @@ function cli_docker_run() {
 	ARMBIAN_CLI_RELAUNCH_PARAMS+=(["SET_OWNER_TO_UID"]="${EUID}")                 # fix the owner of files to our UID
 	ARMBIAN_CLI_RELAUNCH_PARAMS+=(["ARMBIAN_BUILD_UUID"]="${ARMBIAN_BUILD_UUID}") # pass down our uuid to the docker instance
 	ARMBIAN_CLI_RELAUNCH_PARAMS+=(["SKIP_LOG_ARCHIVE"]="yes")                     # launched docker instance will not cleanup logs.
+	if [[ -n "${DOCKER_NICE:-}" ]]; then
+		ARMBIAN_CLI_RELAUNCH_PARAMS+=(["DOCKER_NICE"]="${DOCKER_NICE}") # propagated `nice` value
+	fi
 
 	# Produce the re-launch params.
 	declare -g ARMBIAN_CLI_FINAL_RELAUNCH_ARGS=()

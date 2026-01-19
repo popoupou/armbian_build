@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: GPL-2.0
 #
-# Copyright (c) 2013-2023 Igor Pecovnik, igor@armbian.com
+# Copyright (c) 2013-2026 Igor Pecovnik, igor@armbian.com
 #
 # This file is a part of the Armbian Build Framework
 # https://github.com/armbian/build/
@@ -60,7 +60,6 @@ function do_main_configuration() {
 	DEST_LANG="${DEST_LANG:-"en_US.UTF-8"}"                                   # en_US.UTF-8 is default locale for target
 	display_alert "DEST_LANG..." "DEST_LANG: ${DEST_LANG}" "debug"
 
-	declare -g SKIP_EXTERNAL_TOOLCHAINS="${SKIP_EXTERNAL_TOOLCHAINS:-yes}" # don't use any external toolchains, by default.
 	declare -g USE_CCACHE="${USE_CCACHE:-no}"                              # stop using ccache as our worktree is more effective
 
 	# Armbian config is central tool used in all builds. As its build externally, we have moved it to extension. Enable it here.
@@ -94,8 +93,6 @@ function do_main_configuration() {
 		display_alert "Host has no /etc/timezone" "Using Etc/UTC by default" "debug"
 		TZDATA="Etc/UTC" # If not /etc/timezone at host, default to UTC.
 	fi
-
-	USEALLCORES=yes # Use all CPU cores for compiling
 
 	[[ -z $EXIT_PATCHING_ERROR ]] && EXIT_PATCHING_ERROR="" # exit patching if failed
 	[[ -z $HOST ]] && HOST="$BOARD"
@@ -171,8 +168,8 @@ function do_main_configuration() {
 	# Support for LUKS / cryptroot
 	if [[ $CRYPTROOT_ENABLE == yes ]]; then
 		enable_extension "fs-cryptroot-support" # add the tooling needed, cryptsetup
-		if [[ -z $CRYPTROOT_PASSPHRASE ]]; then # a passphrase is mandatory if rootfs encryption is enabled
-			exit_with_error "Root encryption is enabled but CRYPTROOT_PASSPHRASE is not set"
+		if [[ -z $CRYPTROOT_PASSPHRASE ]] && [[ -z $CRYPTROOT_AUTOUNLOCK ]]; then # a passphrase is mandatory if rootfs encryption is enabled, unless CRYPTROOT_AUTOUNLOCK is wanted
+			exit_with_error "Root encryption is enabled but CRYPTROOT_PASSPHRASE or CRYPTROOT_AUTOUNLOCK is not set"
 		fi
 		[[ -z $CRYPTROOT_MAPPER ]] && CRYPTROOT_MAPPER="armbian-root" # TODO: fixed name can't be used for parallel image building (rpardini: ?)
 		[[ -z $CRYPTROOT_SSH_UNLOCK ]] && CRYPTROOT_SSH_UNLOCK=yes
@@ -208,7 +205,7 @@ function do_main_configuration() {
 
 	case $MAINLINE_MIRROR in
 		google)
-			declare -g -r MAINLINE_KERNEL_SOURCE='https://kernel.googlesource.com/pub/scm/linux/kernel/git/stable/linux-stable'
+			declare -g -r MAINLINE_KERNEL_SOURCE='https://kernel.googlesource.com/pub/scm/linux/kernel/git/stable/linux-stable.git'
 			declare -g -r MAINLINE_FIRMWARE_SOURCE='https://kernel.googlesource.com/pub/scm/linux/kernel/git/firmware/linux-firmware.git'
 			;;
 		tuna)
@@ -219,6 +216,10 @@ function do_main_configuration() {
 			declare -g -r MAINLINE_KERNEL_SOURCE='https://mirrors.bfsu.edu.cn/git/linux-stable.git'
 			declare -g -r MAINLINE_FIRMWARE_SOURCE='https://mirrors.bfsu.edu.cn/git/linux-firmware.git'
 			;;
+		gitverse)
+			declare -g -r MAINLINE_KERNEL_SOURCE='https://gitverse.ru/pbs-sunflower/linux-stable.git'
+			declare -g -r MAINLINE_FIRMWARE_SOURCE='https://gitverse.ru/pbs-sunflower/linux-firmware.git'
+			;;
 		*)
 			declare -g -r MAINLINE_KERNEL_SOURCE='https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git' # "linux-stable" was renamed to "linux"
 			declare -g -r MAINLINE_FIRMWARE_SOURCE='https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git'
@@ -226,18 +227,6 @@ function do_main_configuration() {
 	esac
 
 	[[ $USE_GITHUB_UBOOT_MIRROR == yes ]] && UBOOT_MIRROR=github # legacy compatibility?
-
-	case $UBOOT_MIRROR in
-		gitee)
-			declare -g -r MAINLINE_UBOOT_SOURCE='https://gitee.com/mirrors/u-boot.git'
-			;;
-		denx)
-			declare -g -r MAINLINE_UBOOT_SOURCE='https://source.denx.de/u-boot/u-boot.git'
-			;;
-		*)
-			declare -g -r MAINLINE_UBOOT_SOURCE='https://github.com/u-boot/u-boot'
-			;;
-	esac
 
 	case $GITHUB_MIRROR in
 		fastgit)
@@ -252,6 +241,18 @@ function do_main_configuration() {
 			;;
 		*)
 			declare -g -r GITHUB_SOURCE='https://github.com'
+			;;
+	esac
+
+	case $UBOOT_MIRROR in
+		gitee)
+			declare -g -r MAINLINE_UBOOT_SOURCE='https://gitee.com/mirrors/u-boot.git'
+			;;
+		denx)
+			declare -g -r MAINLINE_UBOOT_SOURCE='https://source.denx.de/u-boot/u-boot.git'
+			;;
+		*)
+			declare -g -r MAINLINE_UBOOT_SOURCE="${GITHUB_SOURCE}/u-boot/u-boot"
 			;;
 	esac
 
@@ -319,6 +320,10 @@ function do_main_configuration() {
 			;;
 	esac
 
+        # enable APA extension for Debian Unstable release
+	# loong64 is not supported now
+	#  [ "$RELEASE" = "sid" ] && [ "$ARCH" != "loong64" ] && enable_extension "apa"
+
 	## Extensions: at this point we've sourced all the config files that will be used,
 	##             and (hopefully) not yet invoked any extension methods. So this is the perfect
 	##             place to initialize the extension manager. It will create functions
@@ -352,31 +357,29 @@ function do_main_configuration() {
 }
 
 function do_extra_configuration() {
-	[[ -n $ATFSOURCE && -z $ATF_USE_GCC ]] && exit_with_error "Error in configuration: ATF_USE_GCC is unset"
-	[[ -z $UBOOT_USE_GCC ]] && exit_with_error "Error in configuration: UBOOT_USE_GCC is unset"
-	[[ -z $KERNEL_USE_GCC ]] && exit_with_error "Error in configuration: KERNEL_USE_GCC is unset"
-
 	declare BOOTCONFIG_VAR_NAME="BOOTCONFIG_${BRANCH^^}" # Branch name, uppercase
 	BOOTCONFIG_VAR_NAME=${BOOTCONFIG_VAR_NAME//-/_}      # Replace dashes with underscores
 	[[ -n ${!BOOTCONFIG_VAR_NAME} ]] && BOOTCONFIG=${!BOOTCONFIG_VAR_NAME}
 	[[ -z $BOOTPATCHDIR ]] && BOOTPATCHDIR="u-boot-$LINUXFAMILY" # @TODO move to hook
 	[[ -z $ATFPATCHDIR ]] && ATFPATCHDIR="atf-$LINUXFAMILY"
 
-	if [[ "$RELEASE" =~ ^(focal|jammy|noble|oracular|plucky)$ ]]; then
+	if [[ "$RELEASE" =~ ^(focal|jammy|noble|oracular|plucky|questing|resolute)$ ]]; then
 		DISTRIBUTION="Ubuntu"
 	else
 		DISTRIBUTION="Debian"
 	fi
 
 	DEBIAN_MIRROR='deb.debian.org/debian'
-	DEBIAN_SECURTY='security.debian.org/'
+	# loong64 is using debian-ports repo now
+	[[ "${ARCH}" == "loong64" ]] && DEBIAN_MIRROR='deb.debian.org/debian-ports'
+	DEBIAN_SECURITY='security.debian.org/'
 	[[ "${ARCH}" == "amd64" ]] &&
 		UBUNTU_MIRROR='archive.ubuntu.com/ubuntu/' ||
 		UBUNTU_MIRROR='ports.ubuntu.com/'
 
 	if [[ $DOWNLOAD_MIRROR == "china" ]]; then
 		DEBIAN_MIRROR='mirrors.tuna.tsinghua.edu.cn/debian'
-		DEBIAN_SECURTY='mirrors.tuna.tsinghua.edu.cn/debian-security'
+		DEBIAN_SECURITY='mirrors.tuna.tsinghua.edu.cn/debian-security'
 		[[ "${ARCH}" == "amd64" ]] &&
 			UBUNTU_MIRROR='mirrors.tuna.tsinghua.edu.cn/ubuntu/' ||
 			UBUNTU_MIRROR='mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/'
@@ -384,7 +387,7 @@ function do_extra_configuration() {
 
 	if [[ $DOWNLOAD_MIRROR == "bfsu" ]]; then
 		DEBIAN_MIRROR='mirrors.bfsu.edu.cn/debian'
-		DEBIAN_SECURTY='mirrors.bfsu.edu.cn/debian-security'
+		DEBIAN_SECURITY='mirrors.bfsu.edu.cn/debian-security'
 		[[ "${ARCH}" == "amd64" ]] &&
 			UBUNTU_MIRROR='mirrors.bfsu.edu.cn/ubuntu/' ||
 			UBUNTU_MIRROR='mirrors.bfsu.edu.cn/ubuntu-ports/'
@@ -617,7 +620,7 @@ function check_filesystem_compatibility_on_host() {
 			if [ -n "$build_host_kernel_config" ]; then
 				if ! grep -q '^CONFIG_F2FS_FS_XATTR=y$' "$build_host_kernel_config" ||
 					! grep -q '^CONFIG_F2FS_FS_SECURITY=y$' "$build_host_kernel_config"; then
-					exit_with_error "Required kernel configurations for f2fs filesystem not enabled." "Please enable CONFIG_F2FS_FS_XATTR and CONFIG_F2FS_FS_SECURITY in your kernel configuration." "err"
+					exit_with_error "Required kernel configurations for f2fs filesystem not enabled." "Please enable CONFIG_F2FS_FS_XATTR and CONFIG_F2FS_FS_SECURITY in your host kernel configuration." "err"
 				fi
 			fi
 		fi

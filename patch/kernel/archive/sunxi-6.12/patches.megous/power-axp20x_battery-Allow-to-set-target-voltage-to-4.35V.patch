@@ -14,7 +14,7 @@ diff --git a/drivers/power/supply/axp20x_battery.c b/drivers/power/supply/axp20x
 index 111111111111..222222222222 100644
 --- a/drivers/power/supply/axp20x_battery.c
 +++ b/drivers/power/supply/axp20x_battery.c
-@@ -629,6 +629,11 @@ static int axp20x_battery_set_max_voltage(struct axp20x_batt_ps *axp20x_batt,
+@@ -631,6 +631,11 @@ static int axp20x_battery_set_max_voltage(struct axp20x_batt_ps *axp20x_batt,
  		val = AXP20X_CHRG_CTRL1_TGT_4_2V;
  		break;
  

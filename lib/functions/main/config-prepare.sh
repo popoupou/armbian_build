@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: GPL-2.0
 #
-# Copyright (c) 2013-2023 Igor Pecovnik, igor@armbian.com
+# Copyright (c) 2013-2026 Igor Pecovnik, igor@armbian.com
 #
 # This file is a part of the Armbian Build Framework
 # https://github.com/armbian/build/
@@ -166,7 +166,11 @@ function config_early_init() {
 
 	display_alert "Starting single build process" "${BOARD:-"no BOARD set"}" "info"
 
-	declare -g -a KERNEL_DRIVERS_SKIP=() # Prepare array to be filled in by board/family/extensions
+	# Do not initialize an empty array if it exists.
+	if [ "${KERNEL_DRIVERS_SKIP[*]}" == "" ]; then
+		# Prepare array to be filled in by board/family/extensions
+		declare -g -a KERNEL_DRIVERS_SKIP=()
+	fi
 
 	silent="yes" track_general_config_variables "after config_early_init" # don't log anything, just init the change tracking
 

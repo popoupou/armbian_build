@@ -15,15 +15,15 @@ diff --git a/drivers/power/supply/axp20x_battery.c b/drivers/power/supply/axp20x
 index 111111111111..222222222222 100644
 --- a/drivers/power/supply/axp20x_battery.c
 +++ b/drivers/power/supply/axp20x_battery.c
-@@ -127,6 +127,7 @@ struct axp20x_batt_ps {
+@@ -129,6 +129,7 @@ struct axp20x_batt_ps {
  	/* Maximum constant charge current */
  	unsigned int max_ccc;
  	const struct axp_data	*data;
 +	struct power_supply_battery_info *info;
+ 	bool ts_disable;
  };
  
- static int axp20x_battery_get_max_voltage(struct axp20x_batt_ps *axp20x_batt,
-@@ -460,6 +461,16 @@ static int axp20x_battery_get_prop(struct power_supply *psy,
+@@ -463,6 +464,16 @@ static int axp20x_battery_get_prop(struct power_supply *psy,
  		val->intval *= 1000;
  		break;
  
@@ -40,7 +40,7 @@ index 111111111111..222222222222 100644
  	default:
  		return -EINVAL;
  	}
-@@ -914,6 +925,8 @@ static enum power_supply_property axp20x_battery_props[] = {
+@@ -916,6 +927,8 @@ static enum power_supply_property axp20x_battery_props[] = {
  	POWER_SUPPLY_PROP_VOLTAGE_MIN,
  	POWER_SUPPLY_PROP_VOLTAGE_OCV,
  	POWER_SUPPLY_PROP_CAPACITY,
@@ -49,7 +49,7 @@ index 111111111111..222222222222 100644
  };
  
  static enum power_supply_property axp717_battery_props[] = {
-@@ -1213,12 +1226,18 @@ static const struct of_device_id axp20x_battery_ps_id[] = {
+@@ -1233,12 +1246,18 @@ static const struct of_device_id axp20x_battery_ps_id[] = {
  };
  MODULE_DEVICE_TABLE(of, axp20x_battery_ps_id);
  
@@ -69,7 +69,7 @@ index 111111111111..222222222222 100644
  	struct device *dev = &pdev->dev;
  	const struct axp_irq_data *irq_data;
  	int irq, ret;
-@@ -1256,9 +1275,12 @@ static int axp20x_power_probe(struct platform_device *pdev)
+@@ -1276,9 +1295,12 @@ static int axp20x_power_probe(struct platform_device *pdev)
  
  	axp20x_batt->health = POWER_SUPPLY_HEALTH_GOOD;
  

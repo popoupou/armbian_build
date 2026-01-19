@@ -1,5 +1,6 @@
 # Rockchip RK3568 quad core 4GB RAM eMMC NVMe 2x USB3 1x GbE 2x 2.5GbE
 BOARD_NAME="NanoPi R5S"
+BOARD_VENDOR="friendlyelec"
 BOARDFAMILY="rockchip64"
 BOARD_MAINTAINER="utlark"
 BOOT_SOC="rk3568"
@@ -26,11 +27,11 @@ function post_family_config__uboot_config() {
 }
 
 function post_family_tweaks__nanopir5s_udev_network_interfaces() {
-	display_alert "$BOARD" "Renaming interfaces WAN LAN1 LAN2" "info"
+	display_alert "$BOARD" "Renaming interfaces WAN1 LAN1 LAN2" "info"
 
 	mkdir -p $SDCARD/etc/udev/rules.d/
 	cat <<- EOF > "${SDCARD}/etc/udev/rules.d/70-persistent-net.rules"
-		SUBSYSTEM=="net", ACTION=="add", KERNELS=="fe2a0000.ethernet", NAME:="wan"
+		SUBSYSTEM=="net", ACTION=="add", KERNELS=="fe2a0000.ethernet", NAME:="wan1"
 		SUBSYSTEM=="net", ACTION=="add", KERNELS=="0000:01:00.0", NAME:="lan1"
 		SUBSYSTEM=="net", ACTION=="add", KERNELS=="0001:01:00.0", NAME:="lan2"
 	EOF

@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: GPL-2.0
 #
-# Copyright (c) 2013-2023 Igor Pecovnik, igor@armbian.com
+# Copyright (c) 2013-2026 Igor Pecovnik, igor@armbian.com
 #
 # This file is a part of the Armbian Build Framework
 # https://github.com/armbian/build/
@@ -215,7 +215,7 @@ function move_images_to_final_destination() {
 		done
 	else
 		display_alert "Moving artefacts using rsync to final destination" "${version}" "info"
-		run_host_command_logged rsync -av --sparse --no-owner --no-group --remove-source-files "${DESTIMG}/${version}"* "${FINALDEST}"
+		run_host_command_logged rsync -av --no-owner --no-group --remove-source-files "${DESTIMG}/${version}"* "${FINALDEST}"
 		run_host_command_logged rm -rfv --one-file-system "${DESTIMG}"
 	fi
 	return 0

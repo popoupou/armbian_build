@@ -18,7 +18,7 @@ diff --git a/drivers/pci/pcie/portdrv.c b/drivers/pci/pcie/portdrv.c
 index 111111111111..222222222222 100644
 --- a/drivers/pci/pcie/portdrv.c
 +++ b/drivers/pci/pcie/portdrv.c
-@@ -739,7 +739,7 @@ static void pcie_portdrv_shutdown(struct pci_dev *dev)
+@@ -741,7 +741,7 @@ static void pcie_portdrv_shutdown(struct pci_dev *dev)
  		pm_runtime_dont_use_autosuspend(&dev->dev);
  	}
  

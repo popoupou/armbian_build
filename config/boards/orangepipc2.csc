@@ -1,9 +1,10 @@
 # Allwinner H5 quad core 1GB RAM SoC GBE SPI
 BOARD_NAME="Orange Pi PC2"
+BOARD_VENDOR="xunlong"
 BOARDFAMILY="sun50iw2"
 BOARD_MAINTAINER=""
 BOOTCONFIG="orangepi_pc2_defconfig"
-KERNEL_TARGET="legacy,current,edge"
+KERNEL_TARGET="current,edge,legacy"
 KERNEL_TEST_TARGET="current"
 FULL_DESKTOP="yes"
 CRUSTCONFIG="h5_defconfig"
