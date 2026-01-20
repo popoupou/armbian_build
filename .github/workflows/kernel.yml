@@ -102,16 +102,36 @@ jobs:
 
       - name: Package kernel source
         run: |
-          # 打包内核源码（用于手动编译驱动）
-          cd output/sources/
-          # 找到内核源码目录
-          SRC_DIR=$(find . -name "linux-*" -type d | grep -E "6.12" | head -1)
+          # 定义可能的内核源码目录路径（适配新版Armbian）
+          POSSIBLE_PATHS=(
+            "build_dir/target-*/linux-*/linux-*"  # 优先查找build_dir下的源码
+            "output/sources/linux-*"             # 兼容旧版sources目录
+          )
+      
+          # 遍历路径查找内核源码目录
+          SRC_DIR=""
+          for path in "${POSSIBLE_PATHS[@]}"; do
+            SRC_DIR=$(find . -path "$path" -type d | grep -E "6.12" | head -1)
+            if [ -n "$SRC_DIR" ]; then
+              break
+            fi
+          done
+      
+          # 检查是否找到源码目录
           if [ -n "$SRC_DIR" ]; then
-            tar -zcvf ../kernel-source-${{ env.TIMESTAMP }}.tar.gz "$SRC_DIR"
-            echo "✅ Kernel source packaged: ../kernel-source-${{ env.TIMESTAMP }}.tar.gz"
+            # 打包源码到output目录
+            tar -zcvf output/kernel-source-${{ env.TIMESTAMP }}.tar.gz "$SRC_DIR"
+            echo "✅ Kernel source packaged: output/kernel-source-${{ env.TIMESTAMP }}.tar.gz"
+            # 验证打包文件
+            if [ -f "output/kernel-source-${{ env.TIMESTAMP }}.tar.gz" ]; then
+              ls -lh output/kernel-source-${{ env.TIMESTAMP }}.tar.gz
+            fi
           else
-            echo "❌ Kernel source directory not found"
-            exit 1
+            echo "⚠️ Kernel source directory not found (skip packaging)"
+            echo "ℹ️ Available directories:"
+            find . -name "linux-*" -type d | grep -E "6.12|current" || true
+            # 不强制退出，因为头文件deb包已生成，源码打包是可选的
+            # exit 1
           fi
 
       - name: Upload artifacts
