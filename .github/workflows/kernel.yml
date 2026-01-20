@@ -78,15 +78,25 @@ jobs:
 
       - name: Verify build output
         run: |
-          # 列出编译结果
+          # 列出编译结果（仅检查存在的目录）
           echo "=== Build Output ==="
           ls -lh output/debs/
-          ls -lh output/images/
-          # 检查关键文件是否存在
-          if [ -f "output/debs/linux-headers-${{ env.KERNEL_NAME }}_*_armhf.deb" ]; then
-            echo "✅ Kernel headers package generated"
+          
+          # 检查关键文件是否存在（只验证内核头文件和镜像包）
+          HEADERS_DEB=$(find output/debs/ -name "linux-headers-current-meson_*.deb" | head -1)
+          IMAGE_DEB=$(find output/debs/ -name "linux-image-current-meson_*.deb" | head -1)
+          
+          if [ -n "$HEADERS_DEB" ]; then
+            echo "✅ Kernel headers package generated: $HEADERS_DEB"
           else
             echo "❌ Kernel headers package not found"
+            exit 1
+          fi
+          
+          if [ -n "$IMAGE_DEB" ]; then
+            echo "✅ Kernel image package generated: $IMAGE_DEB"
+          else
+            echo "❌ Kernel image package not found"
             exit 1
           fi
 
