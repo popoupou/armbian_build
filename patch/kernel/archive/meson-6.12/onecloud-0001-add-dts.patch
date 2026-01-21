@@ -6,8 +6,8 @@ Subject: ARM: dts: meson8b: Add DTS for Xunlei Onecloud
 Signed-off-by: hzy <hzyitc@outlook.com>
 ---
  arch/arm/boot/dts/amlogic/Makefile             |   1 +
- arch/arm/boot/dts/amlogic/meson8b-onecloud.dts | 516 ++++++++++++++++++++++++++++++++-
- 2 files changed, 516 insertions(+)
+ arch/arm/boot/dts/amlogic/meson8b-onecloud.dts | 486 ++++++++++
+ 2 files changed, 411 insertions(+)
 
 diff --git a/arch/arm/boot/dts/amlogic/Makefile b/arch/arm/boot/dts/amlogic/Makefile
 index 111111111111..222222222222 100644
@@ -24,11 +24,10 @@ new file mode 100644
 index 000000000000..111111111111
 --- /dev/null
 +++ b/arch/arm/boot/dts/amlogic/meson8b-onecloud.dts
-@@ -0,0 +1,516 @@
+@@ -0,0 +1,486 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
 + * Author: hzy <hzyitc@outlook.com>
-+ * Add WiFi/BT support for Xunlei Onecloud
 + */
 +
 +/dts-v1/;
@@ -36,7 +35,6 @@ index 000000000000..111111111111
 +#include "meson8b.dtsi"
 +#include <dt-bindings/gpio/gpio.h>
 +#include <dt-bindings/input/input.h>
-+#include <dt-bindings/interrupt-controller/irq.h>
 +
 +/ {
 +	model = "Xunlei OneCloud";
@@ -61,34 +59,6 @@ index 000000000000..111111111111
 +	emmc_pwrseq: emmc-pwrseq {
 +		compatible = "mmc-pwrseq-emmc";
 +		reset-gpios = <&gpio BOOT_9 GPIO_ACTIVE_LOW>;
-+	};
-+
-+	/* Add WiFi/BT core configuration */
-+	bt-dev {
-+		compatible = "amlogic,bt-dev";
-+		dev_name = "bt-dev";
-+		status = "okay";
-+		gpio_reset = <&gpio GPIOX_20 GPIO_ACTIVE_HIGH>;
-+	};
-+
-+	wifi {
-+		compatible = "amlogic,aml_broadcm_wifi";
-+		dev_name = "aml_broadcm_wifi";
-+		status = "okay";
-+		interrupt_pin = <&gpio GPIOX_21 GPIO_ACTIVE_HIGH>;
-+		irq_num = <4>;
-+		irq_trigger_type = <IRQ_TYPE_LEVEL_HIGH>;
-+		power_on_pin = <&gpio_ao GPIOAO_6 GPIO_ACTIVE_HIGH>;
-+		power_on_pin2 = <&gpio GPIOX_11 GPIO_ACTIVE_HIGH>;
-+		clock_32k_pin = <&gpio GPIOX_10 GPIO_ACTIVE_HIGH>;
-+	};
-+
-+	wifi_power {
-+		compatible = "amlogic,wifi_power";
-+		dev_name = "wifi_power";
-+		status = "okay";
-+		power_gpio = <&gpio_ao GPIOAO_6 GPIO_ACTIVE_HIGH>;
-+		power_gpio2 = <&gpio GPIOX_11 GPIO_ACTIVE_HIGH>;
 +	};
 +
 +	button {
@@ -438,14 +408,15 @@ index 000000000000..111111111111
 +&sdio {
 +	status = "okay";
 +
-+	pinctrl-0 = <&sd_b_pins>;
-+	pinctrl-names = "default";
-+
 +	// SD card
 +	sd_card_slot: slot@1 {
++		status = "okay";
++
++		pinctrl-0 = <&sd_b_pins>;
++		pinctrl-names = "default";
++
 +		compatible = "mmc-slot";
 +		reg = <1>;
-+		status = "okay";
 +
 +		bus-width = <4>;
 +		no-sdio;
@@ -456,24 +427,23 @@ index 000000000000..111111111111
 +		cd-gpios = <&gpio CARD_6 GPIO_ACTIVE_LOW>;
 +
 +		vmmc-supply = <&vcc_3v3>;
-+		// vqmmc-supply = <&vcc_3v3>;
 +	};
 +
-+	// WiFi SDIO slot
++	//wifi
 +	sdio_wifi: slot@0 {
++		status = "okay";
++
++		pinctrl-0 = <&sd_a_pins>;
++		pinctrl-names = "default";
++
 +		compatible = "mmc-slot";
 +		reg = <0>;
-+		status = "okay";
-+		pinname = "sdio";
-+		ocr_avail = <0x200000>;
-+		caps = "MMC_CAP_4_BIT_DATA","MMC_CAP_SDIO_IRQ",
-+		       "MMC_CAP_MMC_HIGHSPEED","MMC_CAP_SD_HIGHSPEED",
-+		       "MMC_CAP_NONREMOVABLE";
-+		f_min = <300000>;
-+		f_max = <50000000>;
-+		max_req_size = <0x20000>;
-+		card_type = <3>; // SDIO device (WiFi)
++		bus-width = <4>;
 +		vmmc-supply = <&vcc_3v3>;
++
++		disable-wp;
++		cap-sdio-irq;
++		non-removable;
 +	};
 +};
 +
