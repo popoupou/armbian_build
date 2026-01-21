@@ -7,7 +7,7 @@ Signed-off-by: hzy <hzyitc@outlook.com>
 ---
  arch/arm/boot/dts/amlogic/Makefile             |   1 +
  arch/arm/boot/dts/amlogic/meson8b-onecloud.dts | 486 ++++++++++
- 2 files changed, 411 insertions(+)
+ 2 files changed, 487 insertions(+)
 
 diff --git a/arch/arm/boot/dts/amlogic/Makefile b/arch/arm/boot/dts/amlogic/Makefile
 index 111111111111..222222222222 100644
