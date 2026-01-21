@@ -16,22 +16,22 @@ diff --git a/arch/arm/boot/dts/amlogic/meson8b.dtsi b/arch/arm/boot/dts/amlogic/
 index 9f87a5678b12..a1b2c3d4e5f6 100644
 --- a/arch/arm/boot/dts/amlogic/meson8b.dtsi
 +++ b/arch/arm/boot/dts/amlogic/meson8b.dtsi
-@@ -458,6 +458,16 @@ sd_b_pins: sd-b {
+@@ -487,6 +487,15 @@
+ 				bias-disable;
+ 			};
  		};
- 	};
-
-+	sd_a_pins: sd-a {
-+		mux {
-+			groups = "sd_d0_a", "sd_d1_a", "sd_d2_a",
-+				 "sd_d3_a", "sd_clk_a", "sd_cmd_a";
-+			function = "sd_a";
-+			bias-disable;
++		
++		sd_a_pins: sd-a {
++			mux {
++				groups = "sd_d0_a", "sd_d1_a", "sd_d2_a",
++					"sd_d3_a", "sd_clk_a", "sd_cmd_a";
++				function = "sd_a";
++				bias-disable;
++			};
 +		};
-+	};
-+
-+
- 	sdxc_c_pins: sdxc-c {
- 		mux {
- 			groups = "sdxc_d0_c", "sdxc_d13_c",
+ 
+ 		sdxc_c_pins: sdxc-c {
+ 			mux {
+
 -- 
 2.43.0
