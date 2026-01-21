@@ -1,0 +1,145 @@
+name: Build OneCloud Kernel & Headers
+
+on:
+  workflow_dispatch:  # 手动触发
+  push:
+    branches:
+      - main         # 可根据你的分支调整
+    paths:
+      - .github/workflows/build-kernel-headers.yml
+
+env:
+  # 核心配置
+  ARMBIAN_REPO: popoupou/armbian_build
+  ARMBIAN_REF: main
+  BOARD: onecloud
+  BRANCH: current    # 对应6.12内核
+  PATCHES: 4077,5076 # 保留你原有的补丁
+
+jobs:
+  build-kernel-headers:
+    name: Build Kernel & Headers
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Set environment variables
+        run: |
+          # 生成时间戳用于标记版本
+          TIMESTAMP=$(date -u +'%Y%m%d-%H%M%S')
+          echo "TIMESTAMP=${TIMESTAMP}" >> $GITHUB_ENV
+          echo "KERNEL_NAME=linux-6.12.66-current-meson" >> $GITHUB_ENV
+
+      - name: Checkout Armbian Build
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.ARMBIAN_REPO }}
+          ref: ${{ env.ARMBIAN_REF }}
+          fetch-depth: 0
+
+      - name: Apply patches
+        if: ${{ env.PATCHES }}
+        run: |
+          # 修复原脚本的补丁下载语法错误
+          IFS=',' read -ra PATCH_IDS <<< "${PATCHES}"
+          for id in "${PATCH_IDS[@]}"; do
+            echo "Downloading patch #${id}"
+            curl -L -O "https://github.com/armbian/build/pull/${id}.patch" || echo "Patch ${id} not found, skip"
+          done
+          # 应用所有补丁
+          for file in *.patch; do
+            if [ -f "$file" ]; then
+              patch --batch -p1 -N < "$file" || echo "Patch $file apply failed, continue"
+            fi
+          done
+
+      - name: Install build dependencies
+        run: |
+          sudo apt update && sudo apt install -y \
+            build-essential bc flex bison libssl-dev \
+            libelf-dev dwarves git curl wget ccache \
+            qemu-user-static binfmt-support
+
+      - name: Build Kernel & Headers
+        run: |
+          # 核心命令：仅编译内核和头文件，跳过镜像构建
+          # 修复：移除注释符号，修正BUILD_HEADERS参数格式（YAML换行需保持参数连续）
+          sudo --preserve-env \
+            ./compile.sh kernel \
+              ALLOW_ROOT=yes \
+              BOARD=${{ env.BOARD }} \
+              BRANCH=${{ env.BRANCH }} \
+              EXPERT=yes \
+              USE_CCACHE=no \
+              KERNEL_CONFIGURE=no \
+              BUILD_HEADERS=yes \
+              CLEAN_LEVEL=make
+
+          # 更改输出目录权限
+          sudo chown -R $(id -u):$(id -g) output/
+
+      - name: Verify build output
+        run: |
+          # 列出编译结果（仅检查存在的目录）
+          echo "=== Build Output ==="
+          ls -lh output/debs/ || true
+          
+          # 检查关键文件是否存在（只验证内核头文件和镜像包）
+          HEADERS_DEB=$(find output/debs/ -name "linux-headers-current-meson_*.deb" | head -1)
+          IMAGE_DEB=$(find output/debs/ -name "linux-image-current-meson_*.deb" | head -1)
+          
+          if [ -n "$HEADERS_DEB" ]; then
+            echo "✅ Kernel headers package generated: $HEADERS_DEB"
+          else
+            echo "❌ Kernel headers package not found"
+            exit 1
+          fi
+          
+          if [ -n "$IMAGE_DEB" ]; then
+            echo "✅ Kernel image package generated: $IMAGE_DEB"
+          else
+            echo "❌ Kernel image package not found"
+            exit 1
+          fi
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          path: output/debs/*
+          if-no-files-found: warn  # 无文件时仅警告，不中断
+
+  release:
+    name: Release Kernel & Headers
+    needs: build-kernel-headers
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Generate SHA256 checksum
+        run: |
+          # 修复1：强制创建目录，避免cd失败
+          mkdir -p artifacts/
+          cd artifacts/
+          # 修复2：修正find语法，添加xargs -r（无文件时不执行）
+          find . -type f \( -name "*.deb" -o -name "*.tar.gz" \) | xargs -r sha256sum > sha256sum.txt
+          # 修复3：空文件时写入占位符，避免后续读取失败
+          if [ ! -s sha256sum.txt ]; then
+            echo "no files found" > sha256sum.txt
+          fi
+          cat sha256sum.txt
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: kernel-${{ github.run_id }}-${{ github.run_attempt }}
+          name: OneCloud Kernel & Headers ${{ github.run_id }}
+          body: |
+            ## OneCloud 6.12 Kernel & Headers
+            - Board: onecloud
+            - Kernel: 6.12.66-current-meson
+            - Build Time: ${{ github.run_started_at }}
+            
+            ### SHA256 Checksum
