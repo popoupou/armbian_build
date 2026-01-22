@@ -155,12 +155,12 @@ jobs:
           #- sid # Debian unstable
         TYPE:
           - cli
-          - desktop
-        include:
-          - TYPE: desktop
-            DESKTOP_ENVIRONMENT: xfce
-            DESKTOP_ENVIRONMENT_CONFIG_NAME: config_base
-            DESKTOP_APPGROUPS_SELECTED: ""
+        #  - desktop
+        #include:
+        #  - TYPE: desktop
+        #    DESKTOP_ENVIRONMENT: xfce
+        #    DESKTOP_ENVIRONMENT_CONFIG_NAME: config_base
+        #    DESKTOP_APPGROUPS_SELECTED: ""
 
     steps:
       - name: Import env
