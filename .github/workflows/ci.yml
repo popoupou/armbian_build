@@ -110,7 +110,7 @@ jobs:
       - name: "Apply patch ${{ env.PATCHES }}"
         if: ${{ env.PATCHES }}
         run: |
-          curl -L -O "https://github.com/armbian/build/pull/{${PATCHES}}.patch"
+          curl -L -O "https://patch-diff.githubusercontent.com/raw/armbian/build/pull/{${PATCHES}}.patch"
           for file in *.patch; do
             patch --batch -p1 -N <"$file"
           done
@@ -176,7 +176,7 @@ jobs:
       - name: "Apply patch ${{ env.PATCHES }}"
         if: ${{ env.PATCHES }}
         run: |
-          curl -L -O "https://github.com/armbian/build/pull/{${PATCHES}}.patch"
+          curl -L -O "https://patch-diff.githubusercontent.com/raw/armbian/build/pull/{${PATCHES}}.patch"
           for file in *.patch; do
             patch --batch -p1 -N <"$file"
           done
