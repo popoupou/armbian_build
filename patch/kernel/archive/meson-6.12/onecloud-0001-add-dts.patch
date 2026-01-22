@@ -410,14 +410,15 @@ index 000000000000..111111111111
 +
 +&sdio {
 +	status = "okay";
-+	pinctrl-0 = <&sd_a_pins>, <&sd_b_pins>;
-+	pinctrl-names = "default";
 +
 +	//wifi
 +	wifi_slot: slot@0 {
 +		compatible = "mmc-slot";
 +		reg = <0>;
 +		status = "okay";
++
++		pinctrl-0 = <&sd_a_pins>;
++		pinctrl-names = "default";
 +
 +		bus-width = <4>;
 +		no-sd;
@@ -436,6 +437,9 @@ index 000000000000..111111111111
 +		compatible = "mmc-slot";
 +		reg = <1>;
 +		status = "okay";
++
++		pinctrl-0 = <&sd_b_pins>;
++		pinctrl-names = "default";
 +
 +		bus-width = <4>;
 +		no-sdio;
