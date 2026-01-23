@@ -150,7 +150,7 @@ jobs:
           # - buster # Debian 10
           #- bullseye # Debian 11
           #- bookworm # Debian 12
-          #- sid # Debian  unstable
+          #- sid # Debian unstable
         TYPE:
           - cli
         #  - desktop
