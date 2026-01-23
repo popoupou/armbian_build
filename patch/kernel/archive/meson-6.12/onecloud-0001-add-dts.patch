@@ -44,7 +44,7 @@ index 000000000000..111111111111
 +		serial0 = &uart_AO;
 +		mmc0 = &sd_card_slot;
 +		mmc1 = &sdhc;
-+		mmc2 = &wifi_slot;
++		mmc2 = &sdhc2;
 +	};
 +
 +	chosen {
@@ -61,9 +61,10 @@ index 000000000000..111111111111
 +		reset-gpios = <&gpio BOOT_9 GPIO_ACTIVE_LOW>;
 +	};
 +
-+	wifi_pwrseq: wifi-pwrseq {
++	sdio_pwrseq: sdio-pwrseq {
 +		compatible = "mmc-pwrseq-simple";
-+		reset-gpios = <&gpio_ao GPIOAO_6 GPIO_ACTIVE_LOW>;
++		reset-gpios = <&gpio GPIOX_11 GPIO_ACTIVE_LOW>,
++			      <&gpio_ao GPIOAO_6 GPIO_ACTIVE_LOW>;
 +	};
 +
 +	button {
@@ -398,9 +399,10 @@ index 000000000000..111111111111
 +	pinctrl-0 = <&sdxc_c_pins>;
 +	pinctrl-names = "default";
 +
-+	non-removable;
 +	bus-width = <8>;
 +	max-frequency = <200000000>;
++
++	non-removable;
 +	cap-mmc-highspeed;
 +	mmc-hs200-1_8v;
 +
@@ -408,44 +410,41 @@ index 000000000000..111111111111
 +	vmmc-supply = <&vcc_3v3>;
 +};
 +
++// sdio-wifi
++&sdhc2 {
++	status = "okay";
++	pinctrl-0 = <&sdxc_a_pins>;
++	pinctrl-names = "default";
++
++	bus-width = <4>;
++	max-frequency = <50000000>;
++
++	disable-wp;
++	non-removable;
++	cap-mmc-highspeed;
++	cap-sd-highspeed;
++
++	mmc-pwrseq = <&sdio_pwrseq>;
++	vmmc-supply = <&vcc_3v3>;
++};
++
 +&sdio {
 +	status = "okay";
-+
-+	//wifi
-+	wifi_slot: slot@0 {
-+		compatible = "mmc-slot";
-+		reg = <0>;
-+		status = "okay";
-+
-+		pinctrl-0 = <&sd_a_pins>;
-+		pinctrl-names = "default";
-+
-+		bus-width = <4>;
-+		no-sd;
-+		no-mmc;
-+		cap-sdio-irq;
-+		cap-sd-highspeed;
-+		non-removable;
-+	        max-frequency = <50000000>;
-+
-+		mmc-pwrseq = <&wifi_pwrseq>;
-+		vmmc-supply = <&vcc_3v3>;
-+	};
++	pinctrl-0 = <&sd_b_pins>;
++	pinctrl-names = "default";
 +
 +	// SD card
 +	sd_card_slot: slot@1 {
++		status = "okay";
 +		compatible = "mmc-slot";
 +		reg = <1>;
-+		status = "okay";
-+
-+		pinctrl-0 = <&sd_b_pins>;
-+		pinctrl-names = "default";
 +
 +		bus-width = <4>;
++
 +		no-sdio;
++		disable-wp;
 +		cap-mmc-highspeed;
 +		cap-sd-highspeed;
-+		disable-wp;
 +
 +		cd-gpios = <&gpio CARD_6 GPIO_ACTIVE_LOW>;
 +
