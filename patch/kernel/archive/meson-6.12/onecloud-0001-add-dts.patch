@@ -409,9 +409,9 @@ index 000000000000..111111111111
 +	vmmc-supply = <&vcc_3v3>;
 +};
 +
-+&sdhc2 {
++&sdio2 {
 +	status = "okay";
-+	pinctrl-0 = <&sdxc_a_pins>;
++	pinctrl-0 = <&sd_a_pins>;
 +	pinctrl-names = "default";
 +
 +	bus-width = <4>;

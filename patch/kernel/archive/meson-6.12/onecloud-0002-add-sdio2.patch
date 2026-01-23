@@ -1,0 +1,34 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Your Name <your.email@example.com>
+Date: Thu, 22 Jan 2026 10:00:00 +0800
+Subject: [PATCH] meson8b: pinctrl: add sd_a_pins node
+
+Add missing sd_a_pins definition to fix compile error when referencing
+sd_a_pins in SDIO subnodes.
+
+Signed-off-by: Your Name <your.email@example.com>
+---
+ arch/arm/boot/dts/amlogic/meson8b.dtsi | 7 ++++++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/arch/arm/boot/dts/amlogic/meson.dtsi b/arch/arm/boot/dts/amlogic/meson.dtsi
+index 9f87a5678b12..a1b2c3d4e5f6 100644
+--- a/arch/arm/boot/dts/amlogic/meson.dtsi
++++ b/arch/arm/boot/dts/amlogic/meson.dtsi
+@@ -133,6 +133,13 @@
+ 				reg = <0x8820 0x20>;
+ 				status = "disabled";
+ 			};
++			
++			sdio2: mmc@8c00 {
++				compatible = "amlogic,meson-mx-sdio";
++				reg = <0x8c00 0x20>;
++				interrupts = <GIC_SPI 110 IRQ_TYPE_EDGE_RISING>;
++				status = "disabled";
++			};
+ 
+ 			sdio: mmc@8c20 {
+ 				compatible = "amlogic,meson-mx-sdio";
+
+-- 
+2.43.0
