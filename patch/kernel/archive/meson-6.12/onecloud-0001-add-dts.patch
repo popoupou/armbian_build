@@ -415,10 +415,10 @@ index 000000000000..111111111111
 +	pinctrl-names = "default";
 +
 +	// wifi
-+	wifi_slot: slot@1 {
++	wifi_slot: slot@0 {
 +		status = "okay";
 +		compatible = "mmc-slot";
-+		reg = <1>;
++		reg = <0>;
 +
 +		bus-width = <4>;
 +		max-frequency = <50000000>;
