@@ -44,7 +44,7 @@ index 000000000000..111111111111
 +		serial0 = &uart_AO;
 +		mmc0 = &sd_card_slot;
 +		mmc1 = &sdhc;
-+		mmc2 = &sdhc2;
++		mmc2 = &sdio2;
 +	};
 +
 +	chosen {
