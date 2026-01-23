@@ -143,7 +143,7 @@ jobs:
         BRANCH:
           - current
         RELEASE:
-          #- focal # Ubuntu 20.04  LTS 
+          #- focal # Ubuntu 20.04 LTS 
           #- jammy # Ubuntu 22.04 LTS
           #- lunar # Ubuntu 23.04
           - noble # Ubuntu 24.04 LTS
