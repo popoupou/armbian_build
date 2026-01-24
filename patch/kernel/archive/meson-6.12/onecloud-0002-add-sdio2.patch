@@ -20,12 +20,12 @@ index 9f87a5678b12..a1b2c3d4e5f6 100644
  				status = "disabled";
  			};
 +			
-+			sdio2: mmc@8c00 {
-+				compatible = "amlogic,meson-mx-sdio";
-+				reg = <0x8c00 0x20>;
-+				interrupts = <GIC_SPI 110 IRQ_TYPE_EDGE_RISING>;
-+				status = "disabled";
-+			};
++			//sdio2: mmc@8c00 {
++			//	compatible = "amlogic,meson-mx-sdio";
++			//	reg = <0x8c00 0x20>;
++			//	interrupts = <GIC_SPI 110 IRQ_TYPE_EDGE_RISING>;
++			//	status = "disabled";
++			//};
  
  			sdio: mmc@8c20 {
  				compatible = "amlogic,meson-mx-sdio";

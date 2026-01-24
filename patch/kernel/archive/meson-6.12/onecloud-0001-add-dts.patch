@@ -6,8 +6,8 @@ Subject: ARM: dts: meson8b: Add DTS for Xunlei Onecloud
 Signed-off-by: hzy <hzyitc@outlook.com>
 ---
  arch/arm/boot/dts/amlogic/Makefile             |   1 +
- arch/arm/boot/dts/amlogic/meson8b-onecloud.dts | 496 ++++++++++
- 2 files changed, 497 insertions(+)
+ arch/arm/boot/dts/amlogic/meson8b-onecloud.dts | 515 ++++++++++
+ 2 files changed, 516 insertions(+)
 
 diff --git a/arch/arm/boot/dts/amlogic/Makefile b/arch/arm/boot/dts/amlogic/Makefile
 index 111111111111..222222222222 100644
@@ -24,7 +24,7 @@ new file mode 100644
 index 000000000000..111111111111
 --- /dev/null
 +++ b/arch/arm/boot/dts/amlogic/meson8b-onecloud.dts
-@@ -0,0 +1,496 @@
+@@ -0,0 +1,515 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
 + * Author: hzy <hzyitc@outlook.com>
@@ -43,8 +43,8 @@ index 000000000000..111111111111
 +	aliases {
 +		serial0 = &uart_AO;
 +		mmc0 = &sd_card_slot;
-+		mmc1 = &sdhc;
-+		mmc2 = &wifi_slot;
++		//mmc1 = &sdhc;
++		//mmc2 = &wifi_slot;
 +	};
 +
 +	chosen {
@@ -393,7 +393,8 @@ index 000000000000..111111111111
 +		/* 15 */ "GPIO_TEST_N";
 +};
 +
-+&sdhc {
++//emmc
++/*&sdhc { 
 +	status = "okay";
 +	pinctrl-0 = <&sdxc_c_pins>;
 +	pinctrl-names = "default";
@@ -407,9 +408,27 @@ index 000000000000..111111111111
 +
 +	mmc-pwrseq = <&emmc_pwrseq>;
 +	vmmc-supply = <&vcc_3v3>;
++};*/
++
++//wifi
++&sdhc {
++	status = "okay";
++	pinctrl-0 = <&sdxc_a_pins>;
++	pinctrl-names = "default";
++
++	bus-width = <4>;
++	max-frequency = <50000000>;
++
++	disable-wp;
++	non-removable;
++	cap-mmc-highspeed;
++	cap-sd-highspeed;
++
++	mmc-pwrseq = <&sdio_pwrseq>;
++	vmmc-supply = <&vcc_3v3>;
 +};
 +
-+&sdio2 {
++/*&sdio2 {
 +	status = "okay";
 +	pinctrl-0 = <&sd_a_pins>;
 +	pinctrl-names = "default";
@@ -431,7 +450,7 @@ index 000000000000..111111111111
 +		mmc-pwrseq = <&sdio_pwrseq>;
 +		vmmc-supply = <&vcc_3v3>;
 +	};
-+};
++};*/
 +
 +&sdio {
 +	status = "okay";

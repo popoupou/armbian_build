@@ -51,11 +51,11 @@ index 9f87a5678b12..a1b2c3d4e5f6 100644
  	clock-names = "clkin0", "clkin1", "clkin2", "clkin3", "pclk";
  };
  
-+&sdio2 {
-+	compatible = "amlogic,meson8b-sdio", "amlogic,meson-mx-sdio";
-+	clocks = <&clkc CLKID_SDIO>, <&clkc CLKID_CLK81>;
-+	clock-names = "core", "clkin";
-+};
++//&sdio2 {
++//	compatible = "amlogic,meson8b-sdio", "amlogic,meson-mx-sdio";
++//	clocks = <&clkc CLKID_SDIO>, <&clkc CLKID_CLK81>;
++//	clock-names = "core", "clkin";
++//};
 +
  &secbus {
  	secbus2: system-controller@4000 {
