@@ -43,7 +43,7 @@ index 000000000000..111111111111
 +	aliases {
 +		serial0 = &uart_AO;
 +		mmc0 = &sd_card_slot;
-+		//mmc1 = &sdhc;
++		mmc1 = &sdhc;
 +		//mmc2 = &wifi_slot;
 +	};
 +
@@ -394,7 +394,7 @@ index 000000000000..111111111111
 +};
 +
 +//emmc
-+/*&sdhc { 
++&sdhc { 
 +	status = "okay";
 +	pinctrl-0 = <&sdxc_c_pins>;
 +	pinctrl-names = "default";
@@ -407,24 +407,6 @@ index 000000000000..111111111111
 +	mmc-hs200-1_8v;
 +
 +	mmc-pwrseq = <&emmc_pwrseq>;
-+	vmmc-supply = <&vcc_3v3>;
-+};*/
-+
-+//wifi
-+&sdhc {
-+	status = "okay";
-+	pinctrl-0 = <&sdxc_a_pins>;
-+	pinctrl-names = "default";
-+
-+	bus-width = <4>;
-+	max-frequency = <50000000>;
-+
-+	disable-wp;
-+	non-removable;
-+	cap-mmc-highspeed;
-+	cap-sd-highspeed;
-+
-+	mmc-pwrseq = <&sdio_pwrseq>;
 +	vmmc-supply = <&vcc_3v3>;
 +};
 +
