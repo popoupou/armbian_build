@@ -6,8 +6,8 @@ Subject: ARM: dts: meson8b: Add DTS for Xunlei Onecloud
 Signed-off-by: hzy <hzyitc@outlook.com>
 ---
  arch/arm/boot/dts/amlogic/Makefile             |   1 +
- arch/arm/boot/dts/amlogic/meson8b-onecloud.dts | 515 ++++++++++
- 2 files changed, 516 insertions(+)
+ arch/arm/boot/dts/amlogic/meson8b-onecloud.dts | 497 ++++++++++
+ 2 files changed, 498 insertions(+)
 
 diff --git a/arch/arm/boot/dts/amlogic/Makefile b/arch/arm/boot/dts/amlogic/Makefile
 index 111111111111..222222222222 100644
@@ -24,7 +24,7 @@ new file mode 100644
 index 000000000000..111111111111
 --- /dev/null
 +++ b/arch/arm/boot/dts/amlogic/meson8b-onecloud.dts
-@@ -0,0 +1,515 @@
+@@ -0,0 +1,497 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
 + * Author: hzy <hzyitc@outlook.com>
